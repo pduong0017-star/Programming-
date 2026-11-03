@@ -1,0 +1,134 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidVideoProject(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.userId == request.auth.uid &&
+             data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 80 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             data.caption is string && data.caption.size() >= 1 && data.caption.size() <= 500 &&
+             data.hashtags is string && data.hashtags.size() >= 1 && data.hashtags.size() <= 200 &&
+             data.scenePreset is string && data.scenePreset in ['cyberpunk', 'golden_hour', 'synthwave', 'glitch_matrix', 'y2k_dream'] &&
+             data.aiFilter is string && data.aiFilter in ['none', 'neon_glow', 'vintage_film', 'anime_cel', 'cyber_matrix', 'dreamy_bloom'] &&
+             data.transitionStyle is string && data.transitionStyle in ['whip_pan', 'glitch_cut', 'zoom_burst', 'smooth_fade'] &&
+             data.musicTrack is string && data.musicTrack.size() >= 1 && data.musicTrack.size() <= 100 &&
+             data.bpm is int && data.bpm >= 60 && data.bpm <= 220 &&
+             data.durationSeconds is int && data.durationSeconds >= 5 && data.durationSeconds <= 180 &&
+             data.autoCaptionsJson is string && data.autoCaptionsJson.size() >= 1 && data.autoCaptionsJson.size() <= 3000 &&
+             data.aiDirectorNotes is string && data.aiDirectorNotes.size() >= 1 && data.aiDirectorNotes.size() <= 2000 &&
+             data.viralScore is int && data.viralScore >= 0 && data.viralScore <= 100 &&
+             data.likesCount is int && data.likesCount >= 0 && data.likesCount <= 10000000 &&
+             data.isPublished is bool &&
+             (!('mediaUri' in data) || data.mediaUri == null || (data.mediaUri is string && data.mediaUri.size() <= 1000));
+    }
+
+    function isValidAiTemplate(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.userId == request.auth.uid &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.category is string && data.category in ['dance_trend', 'story_vlog', 'tech_review', 'comedy_skit', 'cinematic_broll'] &&
+             data.hookLine is string && data.hookLine.size() >= 1 && data.hookLine.size() <= 300 &&
+             data.storyboardBeats is list && data.storyboardBeats.size() <= 10 &&
+             (data.storyboardBeats.size() == 0 || (data.storyboardBeats[0] is string && data.storyboardBeats[0].size() <= 300)) &&
+             data.recommendedPreset is string && data.recommendedPreset in ['cyberpunk', 'golden_hour', 'synthwave', 'glitch_matrix', 'y2k_dream'] &&
+             data.recommendedFilter is string && data.recommendedFilter in ['none', 'neon_glow', 'vintage_film', 'anime_cel', 'cyber_matrix', 'dreamy_bloom'] &&
+             data.recommendedBpm is int && data.recommendedBpm >= 60 && data.recommendedBpm <= 220;
+    }
+
+    match /video_projects/{projectId} {
+      allow get: if isSignedIn() && isValidId(projectId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(projectId) &&
+                       isValidVideoProject(incoming()) &&
+                       incoming().keys().hasAll([
+                         'userId', 'authorName', 'title', 'caption', 'hashtags',
+                         'scenePreset', 'aiFilter', 'transitionStyle', 'musicTrack',
+                         'bpm', 'durationSeconds', 'autoCaptionsJson', 'aiDirectorNotes',
+                         'viralScore', 'likesCount', 'isPublished', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'authorName', 'title', 'caption', 'hashtags',
+                         'scenePreset', 'aiFilter', 'transitionStyle', 'musicTrack',
+                         'bpm', 'durationSeconds', 'autoCaptionsJson', 'aiDirectorNotes',
+                         'viralScore', 'likesCount', 'isPublished', 'mediaUri',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time;
+
+      allow update: if isSignedIn() &&
+                       isValidId(projectId) &&
+                       isValidVideoProject(incoming()) &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'authorName', 'title', 'caption', 'hashtags',
+                         'scenePreset', 'aiFilter', 'transitionStyle', 'musicTrack',
+                         'bpm', 'durationSeconds', 'autoCaptionsJson', 'aiDirectorNotes',
+                         'viralScore', 'likesCount', 'isPublished', 'mediaUri', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(projectId) && existing().userId == request.auth.uid;
+    }
+
+    match /ai_templates/{templateId} {
+      allow get: if isSignedIn() && isValidId(templateId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(templateId) &&
+                       isValidAiTemplate(incoming()) &&
+                       incoming().keys().hasAll([
+                         'userId', 'name', 'category', 'hookLine', 'storyboardBeats',
+                         'recommendedPreset', 'recommendedFilter', 'recommendedBpm',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'name', 'category', 'hookLine', 'storyboardBeats',
+                         'recommendedPreset', 'recommendedFilter', 'recommendedBpm',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time;
+
+      allow update: if isSignedIn() &&
+                       isValidId(templateId) &&
+                       isValidAiTemplate(incoming()) &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'name', 'category', 'hookLine', 'storyboardBeats',
+                         'recommendedPreset', 'recommendedFilter', 'recommendedBpm', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() && isValidId(templateId) && existing().userId == request.auth.uid;
+    }
+  }
+}

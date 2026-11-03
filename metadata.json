@@ -1,0 +1,6 @@
+{
+  "name": "VibeCut",
+  "description": "Ứng dụng mạng xã hội video ngắn và studio chỉnh sửa video bằng AI tích hợp sẵn.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

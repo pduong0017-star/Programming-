@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer stylized film / AI frame in neon magenta -->
+    <path
+        android:fillColor="#FFFF2A85"
+        android:pathData="M32,28 C32,23.58 35.58,20 40,20 L68,20 C72.42,20 76,23.58 76,28 L76,80 C76,84.42 72.42,88 68,88 L40,88 C35.58,88 32,84.42 32,80 Z" />
+    <!-- Inner dark cutout -->
+    <path
+        android:fillColor="#FF120E24"
+        android:pathData="M37,30 C37,27.24 39.24,25 42,25 L66,25 C68.76,25 71,27.24 71,30 L71,78 C71,80.76 68.76,83 66,83 L42,83 C39.24,83 37,80.76 37,78 Z" />
+    <!-- Bold Electric Cyan Play Triangle -->
+    <path
+        android:fillColor="#FF00F5D4"
+        android:pathData="M45,39 L65,52 L45,65 Z" />
+    <!-- AI Sparkle Star top-right -->
+    <path
+        android:fillColor="#FFFFBE0B"
+        android:pathData="M74,22 L77,30 L85,33 L77,36 L74,44 L71,36 L63,33 L71,30 Z" />
+    <!-- Scissors / Cut diagonal accent bar -->
+    <path
+        android:fillColor="#FF00F5D4"
+        android:pathData="M26,68 L44,58 L46,62 L28,72 Z" />
+</vector>
